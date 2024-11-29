@@ -5,22 +5,28 @@ import os
 # Define the file paths
 base_path = r"\\wsl.localhost\Ubuntu\home\itay_22\fortran\self learning\self_project\self_project\SOD_multiple_methods"
 conservative_and_flux_file = os.path.join(base_path, "conservative_and_flux.dat")
-# fluxes_file = os.path.join(base_path, "fluxes.dat")
+fluxes_glf_file = os.path.join(base_path, "fluxes_GLF.dat")
 fluxes_hll_file = os.path.join(base_path, "fluxes_HLL.dat")
+fluxes_hllc_file = os.path.join(base_path, "fluxes_HLLC.dat")
 final_file = os.path.join(base_path, "final.dat")
 
 # Function to read data from a file
 def read_data(file_path):
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"{file_path} not found.")
-    data = np.loadtxt(file_path, skiprows=1)
+    try:
+        data = np.loadtxt(file_path, skiprows=1)
+    except ValueError as e:
+        print(f"Error reading {file_path}: {e}")
+        data = np.genfromtxt(file_path, skip_header=1, filling_values=np.nan)
     return data
 
 # Read the data
 try:
     conservative_and_flux_data = read_data(conservative_and_flux_file)
-    # fluxes_data = read_data(fluxes_file)
-    fluxes_hll_data = read_data(fluxes_hll_file)
+    fluxes_glf_data = read_data(fluxes_glf_file) if os.path.exists(fluxes_glf_file) else None
+    fluxes_hll_data = read_data(fluxes_hll_file) if os.path.exists(fluxes_hll_file) else None
+    fluxes_hllc_data = read_data(fluxes_hllc_file) if os.path.exists(fluxes_hllc_file) else None
     final_data = read_data(final_file)
 except FileNotFoundError as e:
     print(e)
@@ -37,25 +43,38 @@ plt.ylabel('Conservative Variables')
 plt.legend()
 plt.title('Conservative Variables vs x')
 
-# Plot the fluxes data
-# plt.subplot(2, 2, 2)
-# plt.plot(fluxes_data[:, 0], fluxes_data[:, 1], label='F_conv')
-# plt.plot(fluxes_data[:, 0], fluxes_data[:, 2], label='F_left')
-# plt.plot(fluxes_data[:, 0], fluxes_data[:, 3], label='F_right')
-# plt.xlabel('x')
-# plt.ylabel('Fluxes')
-# plt.legend()
-# plt.title('Fluxes vs x')
+# Plot the GLF fluxes data if it exists
+if fluxes_glf_data is not None:
+    plt.subplot(2, 2, 2)
+    plt.plot(fluxes_glf_data[:, 0], fluxes_glf_data[:, 1], label='F_glf')
+    plt.plot(fluxes_glf_data[:, 0], fluxes_glf_data[:, 2], label='F_left')
+    plt.plot(fluxes_glf_data[:, 0], fluxes_glf_data[:, 3], label='F_right')
+    plt.xlabel('x')
+    plt.ylabel('GLF Fluxes')
+    plt.legend()
+    plt.title('GLF Fluxes vs x')
 
-# Plot the HLL fluxes data
-plt.subplot(2, 2, 3)
-plt.plot(fluxes_hll_data[:, 0], fluxes_hll_data[:, 1], label='F_hll')
-plt.plot(fluxes_hll_data[:, 0], fluxes_hll_data[:, 2], label='F_left')
-plt.plot(fluxes_hll_data[:, 0], fluxes_hll_data[:, 3], label='F_right')
-plt.xlabel('x')
-plt.ylabel('HLL Fluxes')
-plt.legend()
-plt.title('HLL Fluxes vs x')
+# Plot the HLL fluxes data if it exists
+if fluxes_hll_data is not None:
+    plt.subplot(2, 2, 3)
+    plt.plot(fluxes_hll_data[:, 0], fluxes_hll_data[:, 1], label='F_hll')
+    plt.plot(fluxes_hll_data[:, 0], fluxes_hll_data[:, 2], label='F_left')
+    plt.plot(fluxes_hll_data[:, 0], fluxes_hll_data[:, 3], label='F_right')
+    plt.xlabel('x')
+    plt.ylabel('HLL Fluxes')
+    plt.legend()
+    plt.title('HLL Fluxes vs x')
+
+# Plot the HLLC fluxes data if it exists
+if fluxes_hllc_data is not None:
+    plt.subplot(2, 2, 4)
+    plt.plot(fluxes_hllc_data[:, 0], fluxes_hllc_data[:, 1], label='F_hllc')
+    plt.plot(fluxes_hllc_data[:, 0], fluxes_hllc_data[:, 2], label='F_left')
+    plt.plot(fluxes_hllc_data[:, 0], fluxes_hllc_data[:, 3], label='F_right')
+    plt.xlabel('x')
+    plt.ylabel('HLLC Fluxes')
+    plt.legend()
+    plt.title('HLLC Fluxes vs x')
 
 plt.tight_layout()
 plt.show()
